@@ -1,0 +1,59 @@
+Description: ARM64 support
+Author: Will Newton <will.newton@linaro.org>
+Author: Stefano Rivera <stefanor@debian.org>
+Bug-Upstream: https://bitbucket.org/cffi/cffi/issue/136/cffi-tests-fail-on-aarch64
+Bug-Ubuntu: https://bugs.launchpad.net/ubuntu/+source/python-cffi/+bug/1271256
+Origin: upstream, https://bitbucket.org/cffi/cffi/commits/af4e381b5e99c27c466377145a84eeece6e5c199/
+Last-Update: 2014-07-24
+
+--- a/c/_cffi_backend.c
++++ b/c/_cffi_backend.c
+@@ -3622,7 +3622,7 @@
+ #ifdef MS_WIN32
+         sflags |= SF_MSVC_BITFIELDS;
+ #else
+-# ifdef __arm__
++# if defined(__arm__) || defined(__aarch64__)
+         sflags |= SF_GCC_ARM_BITFIELDS;
+ # else
+         sflags |= SF_GCC_X86_BITFIELDS;
+--- a/testing/test_ffi_backend.py
++++ b/testing/test_ffi_backend.py
+@@ -122,7 +122,7 @@
+         self.check("int a:2; short b:15; char c:2; char y;", 5, 4, 8)
+         self.check("int a:2; char b:1; char c:1; char y;", 1, 4, 4)
+ 
+-    @pytest.mark.skipif("platform.machine().startswith('arm')")
++    @pytest.mark.skipif("platform.machine().startswith(('arm', 'aarch64'))")
+     def test_bitfield_anonymous_no_align(self):
+         L = FFI().alignof("long long")
+         self.check("char y; int :1;", 0, 1, 2)
+@@ -135,7 +135,8 @@
+         self.check("char x; long long z:57; char y;", L + 8, L, L + 8 + L)
+         self.check("char x; long long  :57; char y;", L + 8, 1, L + 9)
+ 
+-    @pytest.mark.skipif("not platform.machine().startswith('arm')")
++    @pytest.mark.skipif(
++        "not platform.machine().startswith(('arm', 'aarch64'))")
+     def test_bitfield_anonymous_align_arm(self):
+         L = FFI().alignof("long long")
+         self.check("char y; int :1;", 0, 4, 4)
+@@ -148,7 +149,7 @@
+         self.check("char x; long long z:57; char y;", L + 8, L, L + 8 + L)
+         self.check("char x; long long  :57; char y;", L + 8, L, L + 8 + L)
+ 
+-    @pytest.mark.skipif("platform.machine().startswith('arm')")
++    @pytest.mark.skipif("platform.machine().startswith(('arm', 'aarch64'))")
+     def test_bitfield_zero(self):
+         L = FFI().alignof("long long")
+         self.check("char y; int :0;", 0, 1, 4)
+@@ -159,7 +160,8 @@
+         self.check("char x; int :0; short b:1; char y;", 5, 2, 6)
+         self.check("int a:1; int :0; int b:1; char y;", 5, 4, 8)
+ 
+-    @pytest.mark.skipif("not platform.machine().startswith('arm')")
++    @pytest.mark.skipif(
++        "not platform.machine().startswith(('arm', 'aarch64'))")
+     def test_bitfield_zero_arm(self):
+         L = FFI().alignof("long long")
+         self.check("char y; int :0;", 0, 4, 4)
